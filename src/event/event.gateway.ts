@@ -1,24 +1,51 @@
-import {WebSocketGateway, SubscribeMessage, MessageBody, ConnectedSocket} from '@nestjs/websockets';
-import {Socket} from 'socket.io';
+import {WebSocketGateway, SubscribeMessage, MessageBody, ConnectedSocket, WebSocketServer} from '@nestjs/websockets';
+import {Socket, Server} from 'socket.io';
 
 @WebSocketGateway(8080,{
     cors: {
-        origin: '*'
+        origin: '*',
+        methods: ['GET', 'POST'],
+        transports: ['websocket', 'polling'],
+        credentials: true
     }
 })
 
 export class EventGateway{
 
-    @SubscribeMessage('testing')
+    
+    @WebSocketServer() 
+    server: Server;
+
+    @SubscribeMessage('chat')
     handleEvent(
         @MessageBody() data:string,
-        @ConnectedSocket()  socket:Socket
+        @ConnectedSocket()  client:Socket
         ): string{
-            socket.emit('testing2', data)
+            this.server.emit('chat', data);
             console.log(data)
         return data;
     }
 
+
+    @SubscribeMessage('joinChat')
+    handleJoinChat(
+        @MessageBody() data:string,
+        @ConnectedSocket()  client:Socket
+        ): string{
+            console.log(data)
+            this.server.emit('joinChat', data);
+        return data;
+    }
+
+    @SubscribeMessage('typing')
+    handleTyping(
+        @MessageBody() data:string,
+        @ConnectedSocket()  client:Socket
+        ): string{
+            console.log(data)
+            this.server.emit('typing', data);
+        return data;
+    }
 
 }
 
